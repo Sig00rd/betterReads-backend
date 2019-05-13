@@ -1,6 +1,8 @@
 package recommender
 
-import akka.actor.{Actor, Props}
+import java.io.Serializable
+
+import akka.actor.{Actor, ActorLogging, Props}
 import org.apache.spark.SparkContext
 import org.apache.spark.mllib.recommendation.MatrixFactorizationModel
 
@@ -14,7 +16,7 @@ object RecommenderSystem {
 }
 
 
-class RecommenderSystem(sc: SparkContext) extends Actor {
+class RecommenderSystem(sc: SparkContext) extends Actor with ActorLogging {
   import RecommenderSystem._
 
   var model: Option[MatrixFactorizationModel] = None
@@ -26,6 +28,8 @@ class RecommenderSystem(sc: SparkContext) extends Actor {
   }
 
   private def trainModel() = {
+    // Start a separate actor to train the recommendation system.
+    // This enables the service to continue service requests while it learns new recommendations.
     val trainer = context.actorOf(ModelTrainer.props(sc), "model-trainer")
     trainer ! ModelTrainer.Train
   }
@@ -35,15 +39,18 @@ class RecommenderSystem(sc: SparkContext) extends Actor {
   }
 
   private def generateRecommendations(userId: Int, count: Int) = {
+    log.info(s"Generating ${count} recommendations for user with ID ${userId}")
 
+    // Generate recommendations based on the machine learning model.
+    // When there's no trained model return an empty list instead.
     val results = model match {
-      case Some(m) => m.recommendProducts(userId, count)
-        .map(rating => Recommendation(rating.product, rating.rating))
+      case Some(m) => m.recommendProducts(userId,count)
+        .map(rating => Recommendation(rating.product,rating.rating))
         .toList
 
-      case _ => Nil
+      case None => Nil
     }
+
     sender ! Recommendations(results)
   }
-
 }
