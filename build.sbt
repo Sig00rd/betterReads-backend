@@ -1,6 +1,6 @@
-name := "betterReads"
+name := "betterReads-recommendation-service"
 
-version := "0.1"
+version := "latest"
 
 scalaVersion := "2.12.8"
 
