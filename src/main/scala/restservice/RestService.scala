@@ -56,7 +56,7 @@ class RestService(interface: String, port: Int = 8080)(implicit val system: Acto
             StatusCodes.OK -> GenericResponse("Training started")
           }
         }
-      } ~ path("similar_books") {
+      } ~ pathPrefix("similar_books") {
         path(Segment) { id =>
           get {
             complete {
