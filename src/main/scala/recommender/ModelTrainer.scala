@@ -3,11 +3,12 @@ package recommender
 import akka.actor.{Actor, ActorLogging, Props}
 import org.apache.spark.SparkContext
 import org.apache.spark.mllib.recommendation.{ALS, MatrixFactorizationModel, Rating}
+import org.apache.spark.rdd.RDD
 
 object ModelTrainer {
   case object Train
 
-  case class TrainingResult(model: MatrixFactorizationModel)
+  case class TrainingResult(model: MatrixFactorizationModel, productFeatures: RDD[(Int, Array[Double])])
 
   def props(sc: SparkContext) = Props(new ModelTrainer(sc))
 }
@@ -39,7 +40,7 @@ class ModelTrainer(sc: SparkContext) extends Actor with ActorLogging {
 
     val model = ALS.train(ratings, rank, iterations, lambda)
 
-    sender ! TrainingResult(model)
+    sender ! TrainingResult(model, model.productFeatures)
 
     context.stop(self)
   }

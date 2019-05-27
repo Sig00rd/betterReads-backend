@@ -5,6 +5,7 @@ import java.io.Serializable
 import akka.actor.{Actor, ActorLogging, Props}
 import org.apache.spark.SparkContext
 import org.apache.spark.mllib.recommendation.MatrixFactorizationModel
+import org.apache.spark.rdd.RDD
 
 object RecommenderSystem {
   case object Train {}
@@ -21,12 +22,13 @@ class RecommenderSystem(sc: SparkContext) extends Actor with ActorLogging {
   import RecommenderSystem._
 
   var model: Option[MatrixFactorizationModel] = None
+  var productFeatures: Option[RDD[(Int, Array[Double])]] = None
 
   def receive = {
     case Train => trainModel()
     case GenerateRecommendationsForUser(userId) => generateRecommendationsForUser(userId, 10)
     case FindSimilarBooks(bookId) => findSimilarBooks(bookId, 10)
-    case ModelTrainer.TrainingResult(model) => storeModel(model)
+    case ModelTrainer.TrainingResult(model, productFeatures) => storeModelAndProductFeatures(model, productFeatures)
   }
 
   private def trainModel(): Unit = {
@@ -46,8 +48,10 @@ class RecommenderSystem(sc: SparkContext) extends Actor with ActorLogging {
     sender ! Recommendations(results)
   }
 
-  private def storeModel(model: MatrixFactorizationModel): Unit = {
+  private def storeModelAndProductFeatures(model: MatrixFactorizationModel,
+                                           productFeatures: RDD[(Int, Array[Double])]): Unit = {
     this.model = Some(model)
+    this.productFeatures = Some(productFeatures)
   }
 
   private def generateRecommendationsForUser(userId: Int, count: Int): Unit = {
