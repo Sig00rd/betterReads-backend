@@ -38,6 +38,12 @@ class RecommenderSystem(sc: SparkContext) extends Actor with ActorLogging {
 
   private def findSimilarBooks(bookId: Int, count: Int): Unit = {
     log.info(s"Finding ${count} books similar to book with ID ${bookId}")
+
+    val results = model match {
+      case None => Nil
+    }
+
+    sender ! Recommendations(results)
   }
 
   private def storeModel(model: MatrixFactorizationModel): Unit = {

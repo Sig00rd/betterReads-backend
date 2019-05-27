@@ -40,7 +40,7 @@ class RestService(interface: String, port: Int = 8080)(implicit val system: Acto
         path(Segment) { id =>
           get {
             complete {
-              (recommenderSystem ? RecommenderSystem.GenerateRecommendations(id.toInt))
+              (recommenderSystem ? RecommenderSystem.GenerateRecommendationsForUser(id.toInt))
                 .mapTo[RecommenderSystem.Recommendations]
                 .flatMap(result => Future {
                   StatusCodes.OK -> result
@@ -54,6 +54,18 @@ class RestService(interface: String, port: Int = 8080)(implicit val system: Acto
 
           complete {
             StatusCodes.OK -> GenericResponse("Training started")
+          }
+        }
+      } ~ path("similar_books") {
+        path(Segment) { id =>
+          get {
+            complete {
+              (recommenderSystem ? RecommenderSystem.FindSimilarBooks(id.toInt))
+                .mapTo[RecommenderSystem.Recommendations]
+                .flatMap(result => Future {
+                  StatusCodes.OK -> result
+                })
+            }
           }
         }
       }
