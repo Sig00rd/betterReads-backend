@@ -22,14 +22,14 @@ class RecommenderSystem(sc: SparkContext) extends Actor with ActorLogging {
   import RecommenderSystem._
 
   var model: Option[MatrixFactorizationModel] = None
-  var productFeatures: Option[RDD[(Int, Array[Double])]] = None
 
   def receive = {
     case Train => trainModel()
     case GenerateRecommendationsForUser(userId) => generateRecommendationsForUser(userId, 10)
     case FindSimilarBooks(bookId) => findSimilarBooks(bookId, 10)
-    case ModelTrainer.TrainingResult(model, productFeatures) => storeModelAndProductFeatures(model, productFeatures)
+    case ModelTrainer.TrainingResult(model) => storeModelAndProductFeatures(model)
   }
+
 
   private def trainModel(): Unit = {
     // Start a separate actor to train the recommendation system.
@@ -38,20 +38,27 @@ class RecommenderSystem(sc: SparkContext) extends Actor with ActorLogging {
     trainer ! ModelTrainer.Train
   }
 
+  // todo: get ids of the 10 books with the highest cosine similarity to the one with bookId, then return it as list
+  // todo: of recommendations
   private def findSimilarBooks(bookId: Int, count: Int): Unit = {
     log.info(s"Finding ${count} books similar to book with ID ${bookId}")
 
     val results = model match {
+      case Some(m) => Nil
+      //case Some(m) => mostSimilarBooks(bookId, count)
       case None => Nil
     }
 
     sender ! Recommendations(results)
   }
 
-  private def storeModelAndProductFeatures(model: MatrixFactorizationModel,
-                                           productFeatures: RDD[(Int, Array[Double])]): Unit = {
+//  private def mostSimilarBooks(bookId: Int, count: Int): Recommendations = {
+//
+//  }
+
+
+  private def storeModelAndProductFeatures(model: MatrixFactorizationModel): Unit = {
     this.model = Some(model)
-    this.productFeatures = Some(productFeatures)
   }
 
   private def generateRecommendationsForUser(userId: Int, count: Int): Unit = {

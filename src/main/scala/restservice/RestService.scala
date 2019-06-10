@@ -28,6 +28,7 @@ class RestService(interface: String, port: Int = 8080)(implicit val system: Acto
 
   val recommenderSystem = system.actorOf(RecommenderSystem.props(sparkContext))
 
+
   val errorHandler = ExceptionHandler {
     case e: Exception => complete {
       StatusCodes.InternalServerError -> ErrorResponse("Internal server error")

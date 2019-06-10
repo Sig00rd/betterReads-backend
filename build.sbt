@@ -42,3 +42,10 @@ libraryDependencies ++= {
   )
 }
 
+// slick
+//libraryDependencies ++= Seq(
+//  "com.typesafe.play" %% "play-slick" % "4.0.1",
+//  "com.typesafe.play" %% "play-slick-evolutions" % "4.0.1"
+//)
+// mysql connector for spark sql
+libraryDependencies += "mysql" % "mysql-connector-java" % "8.0.16"
